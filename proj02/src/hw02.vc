@@ -66,18 +66,19 @@
 -- 6. Реализуйте любой алгоритм сортировки. Функцию сравнения можно принимать в качестве аргумента.
 \func len {A : \Type} (l : List A) : Nat
             | nil => 0
-            | cons x xs => 1 + len xs
+            | cons x xs => 1 + len xs -- лучше len xs + 1, что эквивалентно suc (len xs).
 
 \func sort {A : \Type } (l : List A) (f : A -> A -> Bool) : List A => sort' l f  (len l)
-  \where
+  \where {
      \func sort' {A : \Type } (l : List A)  (f : A -> A -> Bool) (i : Nat) : List A \elim i
          | 0  => l
          | suc i => sort' (sort'' l f) f i
-  \where
+-- \where -- так получается двойной уровень вложенности. Зачем?
     \func sort'' {A : \Type} (list : List A) (f : A -> A -> Bool) : List A \elim list
         | cons x (cons y l) => if (f x y) (cons x (sort'' (cons y l) f)) (cons y (sort'' (cons x l) f))
         | cons x nil => cons x nil
         | nil => nil
+  }
 
 
 
@@ -124,7 +125,7 @@
 
 -- t5 : (P or Q -> P and Q) -> (P -> Q) and (Q -> P)
 \func t5 {P Q R : \Type} (f : Either P Q -> \Sigma P Q) : \Sigma (P -> Q) (Q -> P)
-        => (\lam p => (f (inl p)).2, \lam q => (f (inr q)).1) \where
+        => (\lam p => (f (inl p)).2, \lam q => (f (inr q)).1)
 
 -- t6 : ((((P -> Q) -> P) -> P) -> Q) -> Q
 \func t6 {P Q : \Type} (f : ((((P -> Q) -> P) -> P) -> Q)) :  Q =>
