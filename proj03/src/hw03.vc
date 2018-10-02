@@ -6,12 +6,17 @@
   | nil => ys
   | cons x xs => cons x (xs ++ ys)
 
-\func ++-assoc {A : \Type} (xs ys zs : List A) : (xs ++ ys) ++ zs = xs ++ (ys ++ zs) => {?}
+\func ++-assoc {A : \Type} (xs ys zs : List A) : (xs ++ ys) ++ zs = xs ++ (ys ++ zs) \elim xs
+  | nil => idp
+  | cons x xs => pmap (cons x) (++-assoc xs ys zs)
 
 -- 2. На прошлой лекции мы определяли функцию T : Bool -> \Type рекурсивно.
 --    Определите аналогичную функцию индуктивно.
 
-\data T
+\data T (b : Bool) \with
+  | true => Unit
+
+\func absurd {A : \Type} (x : T false) : A
 
 -- 3. Напишите функцию lookup, которая принимает список и натуральное число и возвращает элемент по заданому индексу.
 --    В общем случае эту функцию определить невозможно, т.к. индекс может быть больше, чем число элементов в списке.
@@ -23,22 +28,73 @@
   | suc x, 0 => false
   | suc x, suc y => x < y
 
-\func lookup => {?}
+\func length {A : \Type} (xs : List A) : Nat \with
+  | nil => 0
+  | cons x xs => suc (length xs)
+
+\func lookup {A : \Type} (xs : List A) (n : Nat) (x : T (n < length xs)) : A \elim xs, n
+  | cons x xs, 0 => x
+  | cons x xs, suc n => lookup xs n x
+  | nil, suc n => absurd x
+  | nil, 0 => absurd x
 
 -- 4. Реализуйте аналоги функции replicate для vec и Vec (эта функция создает список заданной длины, состоящий из повторений данного элемента).
+\func replicate_vec {A : \Type} (x : A) (n : Nat) : vec A n \elim n
+  | 0      => ()
+  | suc n => (x, replicate_vec x n)
+
+
+\func replicate_Vec {A : \Type} (x : A) (n : Nat) : Vec A n \elim n
+  | 0 => fnil
+  | suc n => fcons x (replicate_Vec x n)
+
 
 -- 5. Реализуйте аналоги функции map для vec и Vec.
 
+\func map_vec {A B : \Type} {n : Nat} (f : A -> B) (xs : vec A n) : vec B n \elim n, xs
+  | 0, _ => ()
+  | suc n, (x, xs) => (f x, map_vec f xs)
+
+
+\func map_Vec {A B : \Type} {n : Nat} (f : A -> B) (xs : Vec A n) : Vec B n \elim n, xs
+  | 0, fnil => fnil
+  | suc n, fcons x xs => fcons (f x) (map_Vec f xs)
+
 -- 6. Реализуйте аналоги функции zipWith для vec и Vec.
 --    Функция должна принимать вектора одинаковой длины.
+\func zipWith_vec {A B C : \Type} {n : Nat} (f : A -> B -> C) (xs : vec A n) (ys : vec B n) : vec C n \elim n, xs, ys
+    | 0, (), () => ()
+    | suc n, (x, xs), (y, ys) => (f x y, zipWith_vec f xs ys)
+
+\func zipWith_Vec {A B C : \Type} {n : Nat} (f : A -> B -> C) (xs : Vec A n) (ys : Vec B n) : Vec C n \elim n, xs, ys
+    | 0, fnil, fnil => fnil
+    | suc n, fcons x xs, fcons y ys => fcons (f x y) (zipWith_Vec f xs ys)
 
 -- 7. Реализуйте Fin как рекурсивную функцию.
+
+\data FNat (A : \Type)
+    | Succ A
+    | Zero
+
+\data Empty
+
+\func fin (n : Nat) : \Type
+    | 0 => Empty
+    | suc n => FNat (fin n)
+
+\func absurd-f {A : \Type} (x : fin 0) : A
+
+\func fin0 : fin 3 => Zero
+\func fin1 : fin 3 => Succ Zero
+\func fin2 : fin 3 => Succ (Succ Zero)
 
 -- 8. Функции Fin n → A соответствуют спискам элементов A длины n.
 --    Функция, преобразующая Vec A n в Fin n → A, была реализована на лекции.
 --    Реализуйте обратную функцию.
 
-\func coin {A : \Type} {n : Nat} (f : Fin n -> A) : Vec A n => {?}
+\func coin {A : \Type} {n : Nat} (f : Fin n -> A) : Vec A n \elim n
+    | 0 => fnil
+    | suc _ => fcons (f fzero) (coin (\lam f' => f (fsuc f')))
 
 -- 9. Определите тип матриц и ряд функций над ними.
 
@@ -65,7 +121,9 @@
 --     Высота листа равна 0.
 --     Любое такое бинарное дерево будет полным.
 
-\data CTree (A : \Type) (n : Nat)
+\data CTree (A : \Type) (n : Nat) \elim n
+    | 0 => CLeaf
+    | suc n => CNode A (CTree A n) (CTree A n)
 
 -- 11. Определите тип Tree A n бинарных деревьев высоты не больше n, которые хранят элементы только во внутренних узлах, но не в листьях.
 --     Высота листа равна 0.
