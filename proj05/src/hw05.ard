@@ -3,9 +3,34 @@
 
 -- 1. Докажите дистрибутивность умножения над сложением для натуральных чисел.
 
-\func ldistr (n m k : Nat) : n * (m + k) = n * m + n * k => {?}
+\func ldistr (n m k : Nat) : n * (m + k) = n * m + n * k \elim k
+    | 0 => idp
+    | suc k => pmap (\lam x => x + n) (ldistr n m k) *> +-assoc (n * m) (n * k) n
 
-\func rdistr (n m k : Nat) : (m + k) * n = m * n + k * n => {?}
+--\func rdistr (n m k : Nat) : (m + k) * n = m * n + k * n => {?}
+
+
+\func rdistr (n m k : Nat) : (m + k) * n = m * n + k * n \elim n
+    | 0 => idp
+    | suc n => (
+        (m + k) * (suc n)
+        ==< sym (+-assoc ((m + k) * n) m k) >==
+        (m + k) * n + m + k
+        ==< pmap (\lam s => s + (m + k)) (rdistr n m k) >==
+        (m * n + k * n) + (m + k)
+        ==< (+-assoc (m * n) (k * n) (m + k)) >==
+        (m * n) + ((k * n) + (m + k))
+        ==< pmap (\lam s => (m * n) + s) (sym (+-assoc (k * n) m k)) >==
+        (m * n) + ((k * n + m) + k)
+        ==< pmap (\lam s => (m * n) + (s + k)) (+-comm (k * n) m) >==
+        (m * n) + (m + (k * n) + k)
+        ==< pmap (\lam s => (m * n) + s) (+-assoc m (k * n) k) >==
+        (m * n) + (m + ((k * n) + k))
+        ==< sym (+-assoc (m * n) m (k * n + k)) >==
+        (m * n) + m + ((k * n) + k)
+        ==< idp >==
+        m * (suc n) + k * (suc n) `qed
+    )
 
 -- 2. Докажите, что reverse (reverse xs) = xs, где reverse определен через ++.
 
@@ -30,7 +55,12 @@
 
 -- 4. Докажите, что 0 не равно suc x.
 
-\func zero/=suc (x : Nat) (p : 0 = suc x) : Empty => {?}
+
+\data T (n : Nat) \with
+    | suc n => tt
+
+\func absurd (t : T 0) : Empty
+\func zero/=suc (x : Nat) (p : 0 = suc x) : Empty => absurd (transport T (sym p) (tt))
 
 -- 5. Докажите, что fac не равен suc.
 
@@ -46,7 +76,7 @@
 
 \func Jalt {A : \Type} (B : \Pi (a a' : A) -> a = a' -> \Type)
     (b : \Pi (a : A) -> B a a idp)
-    {a a' : A} (p : a = a') : B a a' p => {?}
+    {a a' : A} (p : a = a') : B a a' p => J (B a) (b a) p
 
 -- Выразите J через Jalt. Можно пользоваться только Jalt, idp и всем, что через них выражается.
 
