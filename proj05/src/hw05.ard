@@ -44,10 +44,25 @@
   | nil => nil
   | cons x xs => reverse xs ++ cons x nil
 
--- Это утверждение будет полезно для доказательства.
-\func reverse++ {A : \Type} (xs ys : List A) : reverse (xs ++ ys) = reverse ys ++ reverse xs => {?}
 
-\func reverse-isInvolutive {A : \Type} (xs : List A) : reverse (reverse xs) = xs => {?}
+\func nil-neutral {A : \Type} (xs : List A) : xs = xs ++ nil \elim xs
+    | nil => idp
+    | cons x xs => pmap (cons x) (nil-neutral xs)
+
+\func ++-assoc {A : \Type} (xs ys zs : List A) : (xs ++ ys) ++ zs = xs ++ (ys ++ zs) \elim xs
+    | nil => idp
+    | cons x xs => pmap (cons x) (++-assoc xs ys zs)
+
+-- Это утверждение будет полезно для доказательства.
+\func reverse++ {A : \Type} (xs ys : List A) : reverse (xs ++ ys) = reverse ys ++ reverse xs \elim xs
+    | nil => nil-neutral (reverse ys)
+    | cons x xs => pmap (\lam zs => zs ++ cons x nil) (reverse++ xs ys)
+                   *> ++-assoc (reverse ys) (reverse xs) (cons x nil)
+
+
+\func reverse-isInvolutive {A : \Type} (xs : List A) : reverse (reverse xs) = xs \elim xs
+    | nil => idp
+    | cons x xs => reverse++ (reverse xs) (cons x nil) *> pmap (cons x) (reverse-isInvolutive xs)
 
 -- 3. Докажите, что vnil является нейтральным элементом для v++.
 
@@ -68,7 +83,11 @@
   | 0 => 1
   | suc n => suc n * fac n
 
-\func fac/=suc (p : fac = suc) : Empty => {?}
+\func dec (n : Nat) : Nat
+  | 0 => 0
+  | suc n => n
+
+\func fac/=suc (p : fac = suc) : Empty => zero/=suc 0 (pmap (\lam f => dec(f 1)) p)
 
 -- 6. У оператора J есть другая форма, которую мы будем называть Jalt. Докажите, что J и Jalt эквивалентны, то есть выразите одно через другое и наоборот.
 
