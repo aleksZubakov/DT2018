@@ -25,6 +25,9 @@
 --    То есть ReflTransClosure R -- это минимальное рефлексивное и транзитивное отношение, содержащее R.
 
 \data ReflTransClosure {A : \Type} (R : A -> A -> \Type) (x y : A)
+    | refl {x y : A} (x = y)
+    | trans {x y z : A} (ReflTransClosure R x z) (ReflTransClosure R z y)
+    | contains {x y : A} (R x y)
 
 -- 5. Докажите, что если R уже рекфлексивно и транзитивно, то ReflTransClosure R эквивалентно R.
 
@@ -42,3 +45,26 @@
   | nil, _ => yes
 
 -- 7. Докажите, что filter xs <= xs для любого списка xs.
+\data Bool | true | false
+
+\func idp {A : \Type} {a : A} => path (\lam _ => a)
+
+\func filter {A : \Type} (p : A -> Bool) (xs : List A) : List A \elim xs
+  | nil => nil
+  | cons x xs => \case p x \with {
+    | true => cons x (filter p xs)
+    | false => filter p xs
+  }
+
+\func subl {A : \Type} (y : A) (ys xs : List A) (p : ys <= xs) : ys <= cons y xs \elim ys, xs
+  | nil, _ => yes
+  | cons x xs, cons a as => el-no p
+
+\func filterxs<=xs {A : \Type} (p : A -> Bool) (xs : List A) : (filter p xs) <= xs \elim xs
+  | cons x xs => \case p x \as b \return (\case b \with {
+          | false => filter {A} p xs
+          | true => cons x (filter p xs)}) <= (cons x xs) \with {
+    | true => el-cont idp (filterxs<=xs p xs)
+    | false => subl x (filter p xs) xs (filterxs<=xs p xs)
+  }
+  | nil => yes
