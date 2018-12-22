@@ -9,6 +9,7 @@
   | leaf
   | node (x : A) (left right : Tree A) (Left left x) (Right x right)
 
+-- Неправильно. Нужно, чтобы все элементы в левом поддереве были меньше либо равны, а не только вершина.
 \data Left {A : Poset} (tree : Tree A) (x : A) : \Type \elim tree
   | leaf => Lnill
   | node x' _ _ _ _ => nodeL (x' <= {A} x)
