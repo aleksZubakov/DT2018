@@ -5,6 +5,18 @@
 -- 2. Определите тип бинарных сортированных деревьев.
 --    То есть таких деревьев, в которых для любого узла верно, что все элементы в левом поддереве меньше либо равны, чем значение в узле, которое меньше либо равно, чем все элементы в правом поддереве.
 
+\data Tree (A : Poset) : \Type
+  | leaf
+  | node (x : A) (left right : Tree A) (Left left x) (Right x right)
+
+\data Left {A : Poset} (tree : Tree A) (x : A) : \Type \elim tree
+  | leaf => Lnill
+  | node x' _ _ _ _ => nodeL (x' <= {A} x)
+
+\data Right {A : Poset} (x : A) (tree : Tree A) : \Type \elim tree
+  | leaf => Rnill
+  | node x' _ _ _ _ => nodeR (x <= {A} x')
+
 -- 3. Реализуйте функцию сортировки, возвращающую SortedList.
 
 \func sort {A : TotalPoset} (xs : List A) : SortedList A => {?}
