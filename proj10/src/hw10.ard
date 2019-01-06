@@ -6,17 +6,42 @@
 --    То есть таких деревьев, в которых для любого узла верно, что все элементы в левом поддереве меньше либо равны, чем значение в узле, которое меньше либо равно, чем все элементы в правом поддереве.
 
 \data Tree (A : Poset) : \Type
-  | leaf
-  | node (x : A) (left right : Tree A) (Left left x) (Right x right)
+  | leaf (x : A)
+  | node (x : A) (left right : Tree A) (Less left x) (More x right)
 
 -- Неправильно. Нужно, чтобы все элементы в левом поддереве были меньше либо равны, а не только вершина.
-\data Left {A : Poset} (tree : Tree A) (x : A) : \Type \elim tree
-  | leaf => Lnill
-  | node x' _ _ _ _ => nodeL (x' <= {A} x)
 
-\data Right {A : Poset} (x : A) (tree : Tree A) : \Type \elim tree
-  | leaf => Rnill
-  | node x' _ _ _ _ => nodeR (x <= {A} x')
+-- Ну давайте вот так попробуем:
+
+--\data Left {A : Poset} (tree : Tree A) (x : A) : \Type \elim tree
+--  | leaf => Lnill
+--  | node x' _ _ _ _ => nodeL (x' <= {A} x)
+
+--\data Less {A : Poset} (tree : Tree A) (x : A) : \Type \elim tree
+--  | leaf => Lnill
+--  | node x' left right _ _ => nodeL (x' <= {A} x) (Less left x) (Less right x)
+
+\data Less {A : Poset} (tree : Tree A) (x : A) : \Type \elim tree
+  | leaf x' => Lnill (x' <= x)
+  | node _ left _ _ _ => nodeL (Max left <= {A} x)
+
+
+--\data More {A : Poset} (x : A)  (tree : Tree A) : \Type \elim tree
+--  | leaf => Rnill
+--  | node x' left right _ _ => nodeR (x <= {A} x') (More x left) (More x right)
+
+\data More {A : Poset} (x : A)  (tree : Tree A) : \Type \elim tree
+  | leaf x' => Rnill (x <= x')
+  | node _ _ right _ _ => nodeR (x <= Min right )
+
+\func Min {A : Poset} (tree : Tree) : \Type \elim tree
+  | leaf x => x
+  | node _ left _ _ _ => Min left
+
+\func Max {A : Poset} (tree : Tree) : \Type \elim tree
+  | leaf x => x
+  | node _ _ right _ _ => Max right
+
 
 -- 3. Реализуйте функцию сортировки, возвращающую SortedList.
 
