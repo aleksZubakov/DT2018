@@ -14,15 +14,21 @@
 -- 2. Определите предикат "делится на 3 или на 5" так, чтобы он возвращал утверждения.
 --    Докажите, что MultipleOf3Or5 вкладывается в ℕ.
 
-\func isMultipleOf3Or5 (n : Nat) : \Type => {?}
+\func isDivBy3Or5 (n : Nat) : Bool => \case mod3 n, mod5 n \with {
+  | suc _, suc _ => false
+  | _, _ => true
+}
 
-\func isMultipleOf3Or5-isProp (n : Nat) : isProp (isMultipleOf3Or5 n) => {?}
+\func isMultipleOf3Or5 (n : Nat) : \Type => T (isDivBy3Or5 n)
+
+\func isMultipleOf3Or5-isProp (n : Nat) : isProp (isMultipleOf3Or5 n) => \lam _ _ => T-lem
 
 \func MultipleOf3Or5 => \Sigma (n : Nat) (isMultipleOf3Or5 n)
 
 \func Mul-inc (m : MultipleOf3Or5) => m.1
 
-\func Mul-inc-isInj : isInj Mul-inc => {?}
+\func Mul-inc-isInj : isInj Mul-inc =>
+  \lam t1 t2 (p : t1.1 = t2.1) => sigmaEq (\lam n => T (isDivBy3Or5 n)) t1 t2 p T-lem
 
 -- 3. Мы будем говорить, что тип A тривиален, если существует элемент в A, такой что любой другой элемент в A равен ему.
 --    Докажите, что тип A тривиален тогда и только тогда, когда A является утверждением и A населен.
@@ -31,7 +37,14 @@
 
 \func \infix 1 <-> (A B : \Type) => \Sigma (A -> B) (B -> A)
 
-\func isTriv-lem (A : \Type) : isTriv A <-> (\Sigma (isProp A) A) => {?}
+\func trans {A : \Type} {a a' a'' : A} (p : a = a') (q : a' = a'') : a = a'' => transport (\lam x => a = x) q p
+
+\func sym {A : \Type} {a a' : A} (p : a = a') : a' = a => transport (\lam x => x = a) p idp
+
+\func isTriv-lem (A : \Type) : isTriv A <-> (\Sigma (isProp A) A) => (
+  \lam p => (\lam a b => trans (sym (p.2 a)) (p.2 b), p.1),
+  \lam p => (p.2, p.1 p.2))
+
 
 -- 4. Докажите, что Either не является утверждением в общем случаем.
 
