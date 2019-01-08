@@ -21,6 +21,74 @@
 
 -- 3. Докажите эквивалентность пяти различных определений LessOrEq: lessOrEq, LessOrEq, LessOrEq', LessOrEq'' и LessOrEq'''.
 
+\func sym {A : \Type} {a a' : A} (p : a = a') => transport (\lam x => x = a) p idp
+
+\func absurd {A : \Type} (e : Empty) : A
+
+\func pmap {A B : \Type} (f : A -> B) {a a' : A} (p : a = a') => path (\lam i => f (p @ i))
+
+\func transport {A : \Type} (B : A -> \Type) {a a' : A} (p : a = a') (b : B a) => coe (\lam i => B (p @ i)) b right
+
+\func suc/=0 {n : Nat} (p : suc n = 0) : Empty =>
+  transport (\lam n => \case n \with { | 0 => Empty | suc _ => Unit }) p unit
+
+\func pred (n : Nat) : Nat
+  | 0 => 0
+  | suc n => n
+
+\func \infixr 5 *> {A : \Type} {a a' a'' : A} (p : a = a') (q : a' = a'') : a = a'' => transport (\lam x => a = x) q p
+
+\func lemma_0+n=n {n : Nat} : 0 Nat.+ n = n \elim n
+  | 0 => idp
+  | suc n => pmap suc lemma_0+n=n
+
+\func suc-assoc {n m : Nat} : suc n Nat.+ m = suc (n Nat.+ m) \elim m
+  | 0 => idp
+  | suc m => pmap suc suc-assoc
+
+
+\func lessOrEq->LessOrEq {n m : Nat} (p : lessOrEq n m) : LessOrEq n m  \elim n, m, p
+  | 0, _, _ => z<=n
+  | suc _, 0, ()
+  | suc n, suc m, p => s<=s (lessOrEq->LessOrEq p)
+
+\func LessOrEq->LessOrEq' {n m : Nat} (p : LessOrEq n m) : LessOrEq' n m \elim n, m
+  | 0, m => z<=n' idp
+  | suc n, suc m => \case p \with {
+    |  s<=s p => s<=s' idp idp (LessOrEq->LessOrEq' p)
+  }
+
+\func proofHelper {n m : Nat} (p : LessOrEq'' n m) : LessOrEq'' (suc n) (suc m) \elim n, m, p
+  | _, _, <=-refl p => <=-refl (pmap suc p)
+  | 0, suc m, <=-step leq => <=-step (proofHelper leq)
+  | suc n, suc m, <=-step leq => <=-step (proofHelper leq)
+
+\func LessOrEq'->LessOrEq'' {n m : Nat} (p : LessOrEq' n m) : LessOrEq'' n m \elim n, m, p
+  | 0, suc m, s<=s' _ _ _ => <=-step (LessOrEq'->LessOrEq'' (z<=n' idp))
+  | 0, suc m, z<=n' p => <=-step (LessOrEq'->LessOrEq'' (z<=n' p))
+  | suc n, 0, s<=s' _ p_m _ => absurd (suc/=0 (sym p_m))
+  | suc n, _, z<=n' p => absurd (suc/=0 p)
+  | suc n, suc m, s<=s' {n'} p_n p_m p => proofHelper (LessOrEq'->LessOrEq'' (
+    transport (\lam x => LessOrEq' x m) (sym (pmap pred p_n)) (transport (LessOrEq' n') (sym (pmap pred p_m)) p)
+  ))
+  | 0, 0, p => <=-refl idp
+
+\func lessOrEq''ProofHelper  {n m : Nat} (p : n = m) : 0 Nat.+ n = m => lemma_0+n=n *> p
+
+\func LessOrEq''->LessOrEq''' {n m : Nat} (p : LessOrEq'' n m) : LessOrEq''' n m \elim n, m, p
+  | 0, 0, <=-refl p => (0, lessOrEq''ProofHelper p)
+  | n, suc m, <=-refl p => (0, lessOrEq''ProofHelper p)
+  | suc n, m, <=-refl p => (0, lessOrEq''ProofHelper p)
+  | 0, suc m, <=-step p => (suc m, idp)
+  | suc n, suc m, <=-step p => \case LessOrEq''->LessOrEq''' p \with {
+    | (k, p) => (suc k, pmap suc (suc-assoc *> p))
+  }
+
+\func LessOrEq'''->lessOrEq {n m : Nat} (p : LessOrEq''' n m) : lessOrEq n m \elim n, m, p
+  | suc n, 0, (_, p) => suc/=0 p
+  | suc n, suc m, (k, p) => LessOrEq'''->lessOrEq (k, pmap pred p)
+  | 0, _, _ => unit
+
 -- 4. Определите рефлексивное транзитивное замыкание отношения.
 --    То есть ReflTransClosure R -- это минимальное рефлексивное и транзитивное отношение, содержащее R.
 
