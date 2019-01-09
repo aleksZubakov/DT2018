@@ -24,7 +24,7 @@
 
 \data Less {A : Poset} (tree : Tree A) (x : A) : \Type \elim tree
   | leaf x' => Lnill (x' <= x)
-  | node _ l _ _ _ => nodeL (Max l <= x)
+  | node _ l _ _ _ => nodeL (Max l <= x) -- Если максимальное значение в левом поддереве <= x, это еще не означает, что все значения в дереве <= x.
 
 --\data More {A : Poset} (x : A)  (tree : Tree A) : \Type \elim tree
 --  | leaf => Rnill
