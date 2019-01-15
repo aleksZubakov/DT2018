@@ -71,6 +71,49 @@
 
 \data Maybe (A : \Type) | nothing | just A
 
+\class Monad \extends Functor
+  | \infixl 2 >>= {A B : \Type} (m : F A) (f : A -> F B) : F B
+  | return {A : \Type} (a : A) : F A
+  | id {A : \Type} (a : A) (f : A -> F A)  : (return a >>= f) = f a
+  | assoc {A B C : \Type} (m : F A) (f : A -> F B) (g : B -> F C) : (m >>= f) >>= g = m >>= (\lam x => f x >>= g)
+
+
+\instance MaybeMonad : Monad Maybe
+  | fmap => fmap
+  | fmap-id => fmap-id
+  | fmap-comp => fmap-comp
+  | return => just
+  | >>= => bind
+  | id => id
+  | assoc => assoc
+  \where {
+    \func fmap {A B : \Type} (f : A -> B) (m : Maybe A) : Maybe B \elim m
+      | just a => just (f a)
+      | _ => nothing
+
+    \func fmap-id {A : \Type} (m : Maybe A) : fmap (\lam (x : A) => x) m = m \elim m
+      | nothing => idp
+      | just a => idp
+
+    \func fmap-comp {A B C : \Type} (f : A -> B) (g : B -> C) (y : Maybe A)
+      : fmap (\lam x => g (f x)) y = fmap g (fmap f y) \elim y
+      | just a => idp
+      | nothing => idp
+
+    \func bind {A B : \Type} (m : Maybe A) (f : A -> Maybe B) : Maybe B \elim m
+      | nothing => nothing
+      | just a => f a
+
+    \func id {A : \Type} (a : A) (f : A -> Maybe A) : (bind (just a) f) = f a => idp
+
+    \func assoc {A B C : \Type} (m : Maybe A) (f : A -> Maybe B) (g : B -> Maybe C)
+      : bind (bind m f) g = bind m (\lam x => bind (f x) g) \elim m
+      | nothing => idp
+      | just a => idp
+
+  }
+
+
 -- Это задание можно проигнорировать. Я его добавил на следующий год.
 -- 6. Определите инстансы монады для State и State'.
 

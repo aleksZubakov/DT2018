@@ -9,15 +9,27 @@
 \data Dec (A : \Prop)
   | yes A
   | no (A -> Empty)
+  \where \use \level decIsProp {A : \Prop} (d1 d2 : Dec A) : d1 = d2 \elim d1, d2
+    | yes a, yes a' => pmap yes (Path.inProp a a')
+    | no a, no a' => pmap no (Path.inProp {A -> Empty} a a')
+    | yes a, no a' => absurd (a' a)
+    | no a, yes a' => absurd (a a')
 
--- \func testDec : \Prop -> \Prop => Dec
+\func testDec : \Prop -> \Prop => Dec
 
 -- 2. Докажите следующий закон де Моргана.
 
 \func \infix 1 <-> (A B : \Type) => \Sigma (A -> B) (B -> A)
 
-\func deMorgan (A B C : \Prop) : (\Sigma A (B `Or` C)) <-> ((\Sigma A B) `Or` (\Sigma A C)) => {?}
-
+\func deMorgan (A B C : \Prop) : (\Sigma A (B `Or` C)) <-> ((\Sigma A B) `Or` (\Sigma A C)) =>
+  (\lam a => \case a \with {
+    | (a', inl b) => inl (a', b)
+    | (a', inr c) => inr (a', c)
+  },
+    \lam a => \case a \with {
+      | inl (a', b) => (a', inl b)
+      | inr (a', c) => (a', inr c)
+    })
 -- 3. Определите элиминатор для Or через Or-rec, не используя паттерн матчинг на Or.
 
 \func Or-elim {A B : \Prop} (C : Or A B -> \Prop)
@@ -36,4 +48,5 @@
 -- 5. Докажите, что n-типы замкнуты относительно образования \Pi-типов.
 --    Hint: Доказательство по индукции. Для случая suc n нужно доказать, что если f,g : \Pi (x : A) -> B x верно f = g эквивалентно \Pi (x : A) -> f x = g x.
 
-\func levelPi {A : \Type} (B : A -> \Type) (n : Nat) (p : \Pi (x : A) -> B x `hasLevel` n) : (\Pi (x : A) -> B x) `hasLevel` n => {?}
+\func levelPi {A : \Type} (B : A -> \Type) (n : Nat) (p : \Pi (x : A) -> B x `hasLevel` n) : (\Pi (x : A) -> B x) `hasLevel` n =>
+  {?}
